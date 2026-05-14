@@ -1,0 +1,25 @@
+﻿{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5252",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "TOKOPRO_LEGACY_MYSQL": "Server=127.0.0.1;Port=8889;User Id=root;Password=root;Database=tokopro_nja;Allow User Variables=True;Allow Zero DateTime=No;SslMode=None"
+      }
+    },
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:7170;http://localhost:5252",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "TOKOPRO_LEGACY_MYSQL": "Server=127.0.0.1;Port=8889;User Id=root;Password=root;Database=tokopro_nja;Allow User Variables=True;Allow Zero DateTime=No;SslMode=None"
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+﻿@page "/"
+@inject CustomerApiClient CustomerApiClient
+
+<PageTitle>Home</PageTitle>
+
+<section class="space-y-4">
+    <h1 class="text-3xl font-semibold tracking-tight text-slate-900">TokoProBlaze Modernization</h1>
+    <p class="max-w-3xl text-slate-600">
+        Baseline Sprint 1 untuk migrasi bertahap dari VB.NET ke Blazor + API wrapper.
+        Fokus sprint ini adalah modul awal <span class="font-medium text-slate-900">Master Pelanggan</span>.
+    </p>
+
+    <div class="grid gap-4 md:grid-cols-3">
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p class="text-sm font-medium text-slate-500">Architecture</p>
+            <p class="mt-1 text-slate-900">Domain, Application, Infrastructure, Api, Blazor</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p class="text-sm font-medium text-slate-500">Strategy</p>
+            <p class="mt-1 text-slate-900">Wrapper API ke logic legacy .NET</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p class="text-sm font-medium text-slate-500">Next</p>
+            <p class="mt-1 text-slate-900">Tambah health check koneksi legacy DB</p>
+        </div>
+    </div>
+
+    <div class="rounded-xl border p-4 @(health?.IsHealthy == true ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50")">
+        <p class="text-sm font-medium text-slate-700">Legacy DB Status</p>
+        @if (health is null)
+        {
+            <p class="mt-1 text-sm text-slate-600">Memeriksa koneksi legacy DB...</p>
+        }
+        else
+        {
+            <p class="mt-1 text-sm @(health.IsHealthy ? "text-emerald-700" : "text-amber-700")">
+                Mode: <span class="font-semibold">@health.Mode</span> - @health.Message
+            </p>
+        }
+    </div>
+</section>
+
+@code {
+    private LegacyDbHealthVm? health;
+
+    protected override async Task OnInitializedAsync()
+    {
+        health = await CustomerApiClient.GetLegacyDbHealthAsync();
+    }
+}

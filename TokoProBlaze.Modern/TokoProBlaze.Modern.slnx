@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TokoProBlaze.Api/TokoProBlaze.Api.csproj" />
+    <Project Path="src/TokoProBlaze.Application/TokoProBlaze.Application.csproj" />
+    <Project Path="src/TokoProBlaze.Blazor/TokoProBlaze.Blazor.csproj" />
+    <Project Path="src/TokoProBlaze.Domain/TokoProBlaze.Domain.csproj" />
+    <Project Path="src/TokoProBlaze.Infrastructure/TokoProBlaze.Infrastructure.csproj" />
+    <Project Path="src/TokoProBlaze.Maui/TokoProBlaze.Maui.csproj" />
+  </Folder>
+</Solution>

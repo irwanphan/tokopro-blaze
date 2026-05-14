@@ -1,0 +1,45 @@
+# --- Build & tooling (.NET) ---
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.log
+*.cache
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+publish/
+
+# --- Visual Studio / Rider ---
+.vs/
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+.idea/
+*.DotSettings.user
+
+# --- VS Code (opsional: hapus baris ini jika tim commit workspace settings) ---
+# .vscode/
+
+# --- macOS ---
+.DS_Store
+
+# --- Secrets / lokal (jangan commit connection string produksi) ---
+**/appsettings.*.local.json
+**/secrets.json
+*.pfx
+
+# --- NuGet cache lokal (workaround izin cache di mesin dev) ---
+.nuget-local/
+
+# --- MAUI / mobile build outputs tambahan (jika muncul di root) ---
+*.app/
+
+# --- Legacy ERP (salinan lokal; sumber kebenaran di repo tim lain) ---
+# Semua nama yang diawali ini (folder / zip) hanya untuk kerja lokal — tidak di-push.
+_prjTurboSTOCK_*
+
+_prjTurboSTOCK_20260307
