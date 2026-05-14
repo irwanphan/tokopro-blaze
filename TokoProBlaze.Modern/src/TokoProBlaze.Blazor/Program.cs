@@ -12,6 +12,18 @@ builder.Services.AddHttpClient<CustomerApiClient>((serviceProvider, client) =>
     var apiBaseUrl = configuration["ApiBaseUrl"] ?? "http://localhost:5001";
     client.BaseAddress = new Uri(apiBaseUrl);
 });
+builder.Services.AddHttpClient<ProductApiClient>((serviceProvider, client) =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    var apiBaseUrl = configuration["ApiBaseUrl"] ?? "http://localhost:5001";
+    client.BaseAddress = new Uri(apiBaseUrl);
+});
+builder.Services.AddHttpClient<SupplierApiClient>((serviceProvider, client) =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    var apiBaseUrl = configuration["ApiBaseUrl"] ?? "http://localhost:5001";
+    client.BaseAddress = new Uri(apiBaseUrl);
+});
 
 var app = builder.Build();
 

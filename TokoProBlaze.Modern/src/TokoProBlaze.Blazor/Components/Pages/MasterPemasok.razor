@@ -1,0 +1,197 @@
+@page "/master-pemasok"
+@inject SupplierApiClient SupplierApiClient
+@inject CustomerApiClient CustomerApiClient
+
+<PageTitle>Master Pemasok</PageTitle>
+
+<section class="space-y-4">
+    <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+            <h1 class="text-2xl font-semibold text-slate-900">Master Pemasok</h1>
+            <p class="text-sm text-slate-600">Sprint 3 — daftar pemasok dari tabel legacy <span class="font-medium text-slate-800">tbpemasok</span>.</p>
+        </div>
+        @if (health is not null)
+        {
+            <span class="inline-flex w-fit rounded-full px-3 py-1 text-xs font-medium @(health.IsHealthy ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700")">
+                Data source: @health.Mode
+            </span>
+        }
+        <div class="w-full md:w-80">
+            <label class="mb-1 block text-sm font-medium text-slate-700" for="keyword-pemasok">Cari pemasok</label>
+            <input id="keyword-pemasok"
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                   @bind="Keyword"
+                   @bind:event="onchange"
+                   placeholder="Kode, nama, atau kota..." />
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">@ErrorMessage</div>
+    }
+    else if (IsLoading)
+    {
+        <div class="rounded-lg border border-slate-200 bg-white p-6 text-center text-slate-500">Memuat data...</div>
+    }
+    else
+    {
+        <div class="grid gap-4 lg:grid-cols-3">
+            <div class="overflow-hidden rounded-xl border border-slate-200 lg:col-span-2">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-600">Kode</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-600">Nama</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-600">Kota</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        @foreach (var supplier in suppliers)
+                        {
+                            <tr class="cursor-pointer hover:bg-slate-50" @onclick="() => LoadSupplierDetailAsync(supplier.Code)">
+                                <td class="px-4 py-3 font-medium text-slate-800">@supplier.Code</td>
+                                <td class="px-4 py-3 text-slate-700">@supplier.Name</td>
+                                <td class="px-4 py-3 text-slate-700">@supplier.City</td>
+                                <td class="px-4 py-3">
+                                    <span class="rounded-full px-2 py-1 text-xs font-medium @(supplier.IsActive ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600")">
+                                        @(supplier.IsActive ? "Aktif" : "Nonaktif")
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-white p-4">
+                <p class="text-sm font-semibold text-slate-700">Detail Pemasok</p>
+                @if (selectedSupplier is null)
+                {
+                    <p class="mt-2 text-sm text-slate-500">Pilih pemasok dari tabel untuk melihat detail.</p>
+                }
+                else
+                {
+                    <dl class="mt-3 space-y-2 text-sm">
+                        <div>
+                            <dt class="text-slate-500">Kode</dt>
+                            <dd class="font-medium text-slate-800">@selectedSupplier.Code</dd>
+                        </div>
+                        <div>
+                            <dt class="text-slate-500">Nama</dt>
+                            <dd class="font-medium text-slate-800">@selectedSupplier.Name</dd>
+                        </div>
+                        <div>
+                            <dt class="text-slate-500">Kota</dt>
+                            <dd class="font-medium text-slate-800">@selectedSupplier.City</dd>
+                        </div>
+                        <div>
+                            <dt class="text-slate-500">Status</dt>
+                            <dd class="font-medium @(selectedSupplier.IsActive ? "text-emerald-700" : "text-slate-600")">
+                                @(selectedSupplier.IsActive ? "Aktif" : "Nonaktif")
+                            </dd>
+                        </div>
+                    </dl>
+                }
+            </div>
+        </div>
+        <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">
+            <p class="text-slate-600">Halaman @currentPage dari @totalPages - Total @totalItems data</p>
+            <div class="flex gap-2">
+                <button class="rounded-lg border border-slate-300 px-3 py-1.5 text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled="@(currentPage <= 1)"
+                        @onclick="PreviousPageAsync">
+                    Sebelumnya
+                </button>
+                <button class="rounded-lg border border-slate-300 px-3 py-1.5 text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled="@(currentPage >= totalPages)"
+                        @onclick="NextPageAsync">
+                    Berikutnya
+                </button>
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    private IReadOnlyList<SupplierVm> suppliers = [];
+    private SupplierVm? selectedSupplier;
+    private LegacyDbHealthVm? health;
+    private string? keyword;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private int currentPage = 1;
+    private const int PageSize = 20;
+    private int totalPages = 1;
+    private int totalItems;
+
+    private string? Keyword
+    {
+        get => keyword;
+        set
+        {
+            keyword = value;
+            currentPage = 1;
+            _ = LoadSuppliersAsync();
+        }
+    }
+
+    private bool IsLoading => isLoading;
+    private string? ErrorMessage => errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        health = await CustomerApiClient.GetLegacyDbHealthAsync();
+        await LoadSuppliersAsync();
+    }
+
+    private async Task LoadSuppliersAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            var response = await SupplierApiClient.GetSuppliersPageAsync(currentPage, PageSize, keyword);
+            currentPage = response.Page;
+            totalPages = response.TotalPages;
+            totalItems = response.TotalItems;
+            suppliers = response.Items;
+            selectedSupplier = null;
+        }
+        catch (Exception)
+        {
+            errorMessage = "Gagal mengambil data pemasok dari API wrapper.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadSupplierDetailAsync(string code)
+    {
+        selectedSupplier = await SupplierApiClient.GetSupplierByCodeAsync(code);
+    }
+
+    private async Task PreviousPageAsync()
+    {
+        if (currentPage <= 1)
+        {
+            return;
+        }
+
+        currentPage--;
+        await LoadSuppliersAsync();
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (currentPage >= totalPages)
+        {
+            return;
+        }
+
+        currentPage++;
+        await LoadSuppliersAsync();
+    }
+}

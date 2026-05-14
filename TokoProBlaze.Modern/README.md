@@ -1,4 +1,4 @@
-# TokoProBlaze Modern - Sprint 1
+# TokoProBlaze Modern - Sprint 1–3
 
 Baseline migrasi bertahap dari legacy VB.NET ke Blazor dengan pola wrapper API.
 
@@ -9,6 +9,26 @@ Baseline migrasi bertahap dari legacy VB.NET ke Blazor dengan pola wrapper API.
 - `TokoProBlaze.Infrastructure`: implementasi adapter ke data legacy (sementara mock).
 - `TokoProBlaze.Api`: API wrapper agar UI tidak akses DB langsung.
 - `TokoProBlaze.Blazor`: UI Blazor untuk modul awal.
+
+## Modul Sprint 3
+
+- Master Pemasok (read-only, pola sama dengan pelanggan).
+- Endpoint API:
+  - `GET /api/suppliers?q=...`
+  - `GET /api/suppliers/page?page=1&pageSize=20&q=...`
+  - `GET /api/suppliers/detail?code=...`
+- Halaman Blazor: `/master-pemasok`.
+- Data dari tabel legacy `tbpemasok (Kode, Nama, Kota, bNonAktif)`.
+
+## Modul Sprint 2
+
+- Master Barang (read-only, pola sama dengan pelanggan).
+- Endpoint API:
+  - `GET /api/products?q=...`
+  - `GET /api/products/page?page=1&pageSize=20&q=...`
+  - `GET /api/products/detail?code=...`
+- Halaman Blazor: `/master-barang`.
+- Data dari tabel legacy `tbbarang (Kode, Nama, Satuan1, bNonAktif)`.
 
 ## Modul Sprint 1
 
@@ -33,7 +53,15 @@ Isi konfigurasi koneksi legacy dengan environment variable:
 Catatan:
 
 - `appsettings.json` sengaja tidak menyimpan password database.
-- Struktur tabel yang dipakai: `tbpelanggan (Kode, Nama, Kota, bNonAktif)`.
+- Struktur tabel pelanggan: `tbpelanggan (Kode, Nama, Kota, bNonAktif)`.
+- Struktur tabel barang: `tbbarang (Kode, Nama, Satuan1, bNonAktif)`.
+- Struktur tabel pemasok: `tbpemasok (Kode, Nama, Kota, bNonAktif)`.
+
+## Kebijakan skema database (legacy)
+
+- **Struktur database** (tabel, kolom, index, constraint, migrasi) **diurus sepenuhnya oleh tim dev legacy** di luar repo modern ini.
+- Proyek **TokoProBlaze.Modern** saat ini hanya melakukan **baca** (`SELECT`) ke tabel yang sudah ada; **tidak** ada Entity Framework migrations, `EnsureCreated`, skrip `CREATE`/`ALTER`/`DROP`, atau alat lain yang mengubah skema lewat kode di repo ini.
+- Perubahan kebutuhan kolom/tabel baru: **koordinasi dengan tim legacy** dulu; di sisi modern cukup menyesuaikan query/DTO **setelah** skema resmi diubah di DB.
 
 ## Menjalankan
 
