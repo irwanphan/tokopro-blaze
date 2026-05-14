@@ -142,6 +142,38 @@ api.MapGet("/products/detail", async (string code, IProductService productServic
     return product is null ? Results.NotFound() : Results.Ok(product);
 }).WithName("GetProductByCode");
 
+api.MapPost("/products", async (ProductCreateCommand body, IProductService productService, CancellationToken cancellationToken) =>
+{
+    var result = await productService.CreateProductAsync(body, cancellationToken);
+    if (result.Ok && result.Product is not null)
+    {
+        return Results.Created($"/api/products/detail?code={Uri.EscapeDataString(result.Product.Code)}", result.Product);
+    }
+
+    return result.Error switch
+    {
+        ProductSaveError.Validation => Results.BadRequest(new { message = result.Message }),
+        ProductSaveError.DuplicateCode => Results.Conflict(new { message = result.Message }),
+        _ => Results.StatusCode(500)
+    };
+}).WithName("CreateProduct");
+
+api.MapPut("/products", async (string code, ProductUpdateCommand body, IProductService productService, CancellationToken cancellationToken) =>
+{
+    var result = await productService.UpdateProductAsync(code, body, cancellationToken);
+    if (result.Ok && result.Product is not null)
+    {
+        return Results.Ok(result.Product);
+    }
+
+    return result.Error switch
+    {
+        ProductSaveError.Validation => Results.BadRequest(new { message = result.Message }),
+        ProductSaveError.NotFound => Results.NotFound(new { message = result.Message }),
+        _ => Results.StatusCode(500)
+    };
+}).WithName("UpdateProduct");
+
 api.MapGet("/suppliers", async (string? q, ISupplierService supplierService, CancellationToken cancellationToken) =>
 {
     var suppliers = await supplierService.GetSuppliersAsync(q, cancellationToken);

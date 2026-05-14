@@ -16,13 +16,19 @@
                 Data source: @health.Mode
             </span>
         }
-        <div class="w-full md:w-80">
-            <label class="mb-1 block text-sm font-medium text-slate-700" for="keyword-barang">Cari barang</label>
-            <input id="keyword-barang"
-                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
-                   @bind="Keyword"
-                   @bind:event="onchange"
-                   placeholder="Kode, nama, atau satuan..." />
+        <div class="flex w-full flex-col gap-3 md:ml-auto md:max-w-xl md:flex-row md:items-end">
+            <div class="min-w-0 flex-1">
+                <label class="mb-1 block text-sm font-medium text-slate-700" for="keyword-barang">Cari barang</label>
+                <input id="keyword-barang"
+                       class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                       @bind="Keyword"
+                       @bind:event="onchange"
+                       placeholder="Kode, nama, atau satuan..." />
+            </div>
+            <NavLink href="master-barang/input"
+                     class="inline-flex shrink-0 items-center justify-center rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700">
+                + Input baru
+            </NavLink>
         </div>
     </div>
 
@@ -45,6 +51,7 @@
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">Nama</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">Satuan</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
+                            <th class="px-4 py-3 text-right font-semibold text-slate-600">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
@@ -58,6 +65,12 @@
                                     <span class="rounded-full px-2 py-1 text-xs font-medium @(product.IsActive ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600")">
                                         @(product.IsActive ? "Aktif" : "Nonaktif")
                                     </span>
+                                </td>
+                                <td class="px-4 py-3 text-right" @onclick:stopPropagation="true">
+                                    <NavLink href="@EditHref(product.Code)"
+                                             class="text-sm font-medium text-sky-700 hover:text-sky-900 hover:underline">
+                                        Edit
+                                    </NavLink>
                                 </td>
                             </tr>
                         }
@@ -90,6 +103,12 @@
                             <dd class="font-medium @(selectedProduct.IsActive ? "text-emerald-700" : "text-slate-600")">
                                 @(selectedProduct.IsActive ? "Aktif" : "Nonaktif")
                             </dd>
+                        </div>
+                        <div class="pt-2">
+                            <NavLink href="@EditHref(selectedProduct.Code)"
+                                     class="inline-flex rounded-lg border border-sky-200 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-800 hover:bg-sky-100">
+                                Buka form edit
+                            </NavLink>
                         </div>
                     </dl>
                 }
@@ -172,6 +191,9 @@
     {
         selectedProduct = await ProductApiClient.GetProductByCodeAsync(code);
     }
+
+    private static string EditHref(string code) =>
+        $"master-barang/input?code={Uri.EscapeDataString(code)}";
 
     private async Task PreviousPageAsync()
     {

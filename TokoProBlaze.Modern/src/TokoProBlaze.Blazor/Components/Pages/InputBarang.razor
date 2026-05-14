@@ -1,0 +1,328 @@
+@page "/master-barang/input"
+@rendermode InteractiveServer
+@implements IDisposable
+@inject ProductApiClient ProductApiClient
+@inject NavigationManager Nav
+
+<PageTitle>@(IsEdit ? "Edit Barang" : "Input Barang")</PageTitle>
+
+<section class="mx-auto max-w-5xl space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-semibold text-slate-900">Input Barang</h1>
+            <p class="text-sm text-slate-600">@(IsEdit ? "Ubah data barang" : "Tambah barang baru") — data utama tersimpan ke <span class="font-medium text-slate-800">tbbarang</span>.</p>
+        </div>
+        <NavLink href="master-barang"
+                 class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            Kembali ke daftar
+        </NavLink>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(loadError))
+    {
+        <div class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">@loadError</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(saveError))
+    {
+        <div class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">@saveError</div>
+    }
+
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="space-y-3 border-b border-slate-200 p-4 sm:p-5">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
+                <div class="min-w-0 flex-1 space-y-1">
+                    <label class="text-sm font-medium text-slate-700" for="kode-barang">Kode <span class="text-rose-600">*</span></label>
+                    <input id="kode-barang"
+                           disabled="@IsEdit"
+                           class="@EditableInputClass(IsEdit)"
+                           @bind="code"
+                           @bind:event="oninput"
+                           maxlength="64"
+                           autocomplete="off" />
+                </div>
+                <div class="flex items-center gap-2 pt-6 sm:pt-8">
+                    <input id="nonaktif" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" @bind="isInactive" />
+                    <label for="nonaktif" class="text-sm font-medium text-slate-700">Non-aktif</label>
+                </div>
+            </div>
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-slate-700" for="nama-barang">Nama <span class="text-rose-600">*</span></label>
+                <input id="nama-barang"
+                       class="@EditableInputClass(false)"
+                       @bind="name"
+                       @bind:event="oninput"
+                       maxlength="200"
+                       autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="border-b border-slate-200 bg-slate-50 px-2 pt-2">
+            <nav class="flex flex-wrap gap-1" aria-label="Bagian form barang">
+                @foreach (var tab in SubTabs)
+                {
+                    <button type="button"
+                            class="@SubTabClass(tab.Id)"
+                            @onclick="() => activeSubTab = tab.Id">
+                        @tab.Label
+                    </button>
+                }
+            </nav>
+        </div>
+
+        <div class="p-4 sm:p-5">
+            @if (activeSubTab == "umum")
+            {
+                <p class="mb-4 rounded-lg border border-sky-100 bg-sky-50 px-3 py-2 text-xs text-sky-900">
+                    Yang ditulis ke database pada sprint ini: <span class="font-semibold">Kode, Nama, Satuan1, Non-aktif</span>.
+                    Field lain mengikuti tampilan TokoPro dan siap dihubungkan saat kolom legacy sudah dipetakan.
+                </p>
+                <div class="grid gap-6 lg:grid-cols-2">
+                    <div class="space-y-3">
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Tipe <span class="text-rose-600">*</span></label>
+                            <select disabled class="@DisabledInputClass"></select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Divisi</label>
+                            <select disabled class="@DisabledInputClass"></select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Merk</label>
+                            <select disabled class="@DisabledInputClass"></select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Grup <span class="text-rose-600">*</span></label>
+                            <select disabled class="@DisabledInputClass"></select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Ukuran</label>
+                            <input disabled class="@DisabledInputClass" />
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700" for="satuan">Satuan <span class="text-rose-600">*</span></label>
+                            <div class="flex gap-2">
+                                <input id="satuan" class="@EditableInputClass(false) max-w-[6rem]" @bind="unit1" @bind:event="oninput" maxlength="20" />
+                                <input class="@DisabledInputClass flex-1" disabled value="" placeholder="Satuan tambahan (nanti)" />
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Barcode</label>
+                            <input disabled class="@DisabledInputClass" />
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Catatan</label>
+                            <textarea rows="4" disabled class="@DisabledInputClass resize-y" placeholder="Memo (belum di-mapping)"></textarea>
+                        </div>
+                        <label class="flex items-center gap-2 text-sm text-slate-500">
+                            <input type="checkbox" disabled class="h-4 w-4 rounded border-slate-300" />
+                            Barang berserial number
+                        </label>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="text-sm font-medium text-slate-600">Qty Min</label>
+                                <input type="number" disabled class="@DisabledInputClass" value="0" />
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-sm font-medium text-slate-600">Satuan</label>
+                                <input disabled class="@DisabledInputClass" value="" />
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-sm font-medium text-slate-600">Qty Reorder</label>
+                                <input type="number" disabled class="@DisabledInputClass" value="0" />
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-sm font-medium text-slate-600">Satuan</label>
+                                <input disabled class="@DisabledInputClass" value="" />
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-600">Satuan Def</label>
+                            <input disabled class="@DisabledInputClass max-w-xs" value="" />
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (activeSubTab == "pembelian")
+            {
+                <ProductFormPlaceholder Description="Pemasok utama, pajak pembelian, grid harga beli / HPP — akan diisi setelah API pembelian & multi-satuan." />
+            }
+            else if (activeSubTab == "penjualan")
+            {
+                <ProductFormPlaceholder Description="Margin, pajak penjualan, grid harga per channel — membutuhkan tabel harga jual legacy." />
+            }
+            else if (activeSubTab == "gudang")
+            {
+                <ProductFormPlaceholder Description="Grid gudang & rak per barang — hubungkan ke tabel relasi barang–gudang di MySQL." />
+            }
+            else if (activeSubTab == "akun")
+            {
+                <ProductFormPlaceholder Description="Pemetaan akun GL — samakan dengan tab Akun di form VB (lihat fInput_Barang.Designer.vb)." />
+            }
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3 sm:px-5">
+            <p class="text-xs text-slate-500"><span class="text-rose-600">*</span> harus diisi</p>
+            <div class="flex gap-2">
+                <button type="button"
+                        class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
+                        disabled="@isSaving"
+                        @onclick="CancelAsync">
+                    Batal
+                </button>
+                <button type="button"
+                        class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled="@isSaving"
+                        @onclick="SaveAsync">
+                    @if (isSaving)
+                    {
+                        <span>Menyimpan…</span>
+                    }
+                    else
+                    {
+                        <span aria-hidden="true">✓</span>
+                        <span>Simpan</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    private static readonly (string Id, string Label)[] SubTabs =
+    [
+        ("umum", "Umum"),
+        ("pembelian", "Pembelian"),
+        ("penjualan", "Penjualan"),
+        ("gudang", "Gudang"),
+        ("akun", "Akun")
+    ];
+
+    private string activeSubTab = "umum";
+    private string? editCode;
+    private string code = "";
+    private string name = "";
+    private string unit1 = "";
+    private bool isInactive;
+    private bool isSaving;
+    private string? loadError;
+    private string? saveError;
+
+    private bool IsEdit => !string.IsNullOrWhiteSpace(editCode);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+        SyncEditCodeFromUri(Nav.Uri);
+        await LoadForEditAsync();
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        SyncEditCodeFromUri(e.Location);
+        _ = InvokeAsync(LoadForEditAsync);
+    }
+
+    private void SyncEditCodeFromUri(string uri)
+    {
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out var abs))
+        {
+            return;
+        }
+
+        Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(abs.Query).TryGetValue("code", out var values);
+        editCode = string.IsNullOrWhiteSpace(values.FirstOrDefault()) ? null : values.FirstOrDefault()!.Trim();
+    }
+
+    private async Task LoadForEditAsync()
+    {
+        loadError = null;
+        saveError = null;
+
+        if (!IsEdit)
+        {
+            code = "";
+            name = "";
+            unit1 = "";
+            isInactive = false;
+            return;
+        }
+
+        try
+        {
+            var p = await ProductApiClient.GetProductByCodeAsync(editCode!);
+            if (p is null)
+            {
+                loadError = "Barang tidak ditemukan.";
+                return;
+            }
+
+            code = p.Code;
+            name = p.Name;
+            unit1 = p.Unit1;
+            isInactive = !p.IsActive;
+        }
+        catch (Exception)
+        {
+            loadError = "Gagal memuat data barang.";
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        saveError = null;
+        isSaving = true;
+        try
+        {
+            var active = !isInactive;
+            if (IsEdit)
+            {
+                var (ok, err, _) = await ProductApiClient.UpdateProductAsync(editCode!, new ProductUpdateRequest(name.Trim(), unit1.Trim(), active));
+                if (ok)
+                {
+                    Nav.NavigateTo("master-barang");
+                    return;
+                }
+
+                saveError = err ?? "Gagal menyimpan.";
+            }
+            else
+            {
+                var (ok, err, _) = await ProductApiClient.CreateProductAsync(new ProductCreateRequest(code.Trim(), name.Trim(), unit1.Trim(), active));
+                if (ok)
+                {
+                    Nav.NavigateTo("master-barang");
+                    return;
+                }
+
+                saveError = err ?? "Gagal menyimpan.";
+            }
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void CancelAsync() => Nav.NavigateTo("master-barang");
+
+    private string SubTabClass(string id) =>
+        activeSubTab == id
+            ? "rounded-t-md border border-b-0 border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900"
+            : "rounded-t-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-white/60";
+
+    private static string EditableInputClass(bool readOnly) =>
+        readOnly
+            ? "w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600"
+            : "w-full rounded-lg border border-slate-300 bg-amber-50 px-3 py-2 text-sm text-slate-900 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500";
+
+    private const string DisabledInputClass = "w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500";
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+    }
+}
