@@ -1,0 +1,37 @@
+@{
+    const string baseCls =
+        "flex w-full max-w-[11rem] items-center gap-2 rounded-md px-2 py-1.5 text-left text-[11px] font-medium leading-tight text-slate-700 transition";
+    var enabledCls = $"{baseCls} hover:bg-slate-100";
+    var disabledCls = $"{baseCls} cursor-not-allowed text-slate-400 opacity-60 hover:bg-transparent";
+}
+
+@if (!string.IsNullOrEmpty(Href))
+{
+    <NavLink href="@Href" class="@enabledCls" ActiveClass="bg-sky-100 text-slate-900">
+        @if (Icon is not null)
+        {
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-slate-200 bg-slate-50 text-slate-500">
+                @Icon
+            </span>
+        }
+        <span class="min-w-0 flex-1 truncate">@Text</span>
+    </NavLink>
+}
+else
+{
+    <span class="@disabledCls" title="Belum tersedia di versi web">
+        @if (Icon is not null)
+        {
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-dashed border-slate-200 bg-slate-50/80 text-slate-400">
+                @Icon
+            </span>
+        }
+        <span class="min-w-0 flex-1 truncate">@Text</span>
+    </span>
+}
+
+@code {
+    [Parameter] public string Text { get; set; } = "";
+    [Parameter] public string? Href { get; set; }
+    [Parameter] public RenderFragment? Icon { get; set; }
+}

@@ -1,0 +1,30 @@
+@{
+    const string wrap = "flex w-[5.25rem] shrink-0 flex-col items-center gap-1 rounded-lg px-1 py-2 text-center transition";
+    var enabled = $"{wrap} text-slate-700 hover:bg-slate-100";
+    var disabled = $"{wrap} cursor-not-allowed text-slate-400 opacity-55 hover:bg-transparent";
+}
+
+@if (!string.IsNullOrEmpty(Href))
+{
+    <NavLink href="@Href" class="@enabled" ActiveClass="bg-sky-100 ring-1 ring-sky-200">
+        <span class="flex h-12 w-12 items-center justify-center rounded-md border border-slate-200 bg-gradient-to-b from-white to-slate-50 text-slate-600 shadow-sm">
+            @Icon
+        </span>
+        <span class="text-[10px] font-medium leading-tight">@Text</span>
+    </NavLink>
+}
+else
+{
+    <span class="@disabled" title="Belum tersedia di versi web">
+        <span class="flex h-12 w-12 items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50 text-slate-400">
+            @Icon
+        </span>
+        <span class="text-[10px] font-medium leading-tight">@Text</span>
+    </span>
+}
+
+@code {
+    [Parameter] public string Text { get; set; } = "";
+    [Parameter] public string? Href { get; set; }
+    [Parameter] public RenderFragment? Icon { get; set; }
+}

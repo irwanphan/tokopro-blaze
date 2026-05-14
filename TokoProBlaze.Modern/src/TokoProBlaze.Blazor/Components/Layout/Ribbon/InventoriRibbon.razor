@@ -1,0 +1,34 @@
+@* Urutan grup mengikuti ribbon legacy: Persediaan | Pergudangan | Lainnya *@
+<div class="flex flex-wrap items-stretch gap-y-2">
+    <RibbonGroup Title="Persediaan">
+        <div class="flex flex-wrap gap-3">
+            <div class="flex flex-col gap-0.5">
+                <RibbonMiniLink Text="Divisi" Icon="@RibbonIcons.Grid" />
+                <RibbonMiniLink Text="Merk" Icon="@RibbonIcons.Tag" />
+                <RibbonMiniLink Text="Grup" Icon="@RibbonIcons.Folder" />
+            </div>
+            <div class="flex flex-col gap-0.5">
+                <RibbonMiniLink Text="Kode Harga" Icon="@RibbonIcons.Currency" />
+                <RibbonMiniLink Text="Stok Awal" Icon="@RibbonIcons.Stack" />
+            </div>
+            <div class="flex gap-2">
+                <RibbonTileLink Text="Barang & Jasa" Href="master-barang" Icon="@RibbonIcons.Box" />
+                <RibbonTileLink Text="Price List" Icon="@RibbonIcons.PriceTag" />
+            </div>
+        </div>
+    </RibbonGroup>
+    <RibbonGroup Title="Pergudangan">
+        <div class="flex flex-wrap gap-2">
+            <RibbonTileLink Text="Gudang" Icon="@RibbonIcons.Warehouse" />
+            <RibbonTileLink Text="Barang per Gudang" Icon="@RibbonIcons.WarehouseBox" />
+            <RibbonTileLink Text="Mutasi antar Gudang" Icon="@RibbonIcons.Truck" />
+            <RibbonTileLink Text="Koreksi Stok" Icon="@RibbonIcons.CheckBox" />
+            <RibbonTileLink Text="Item Used" Icon="@RibbonIcons.ArrowBox" />
+        </div>
+    </RibbonGroup>
+    <RibbonGroup Title="Lainnya">
+        <div class="flex flex-wrap gap-2">
+            <RibbonTileLink Text="Jasa Pengiriman" Icon="@RibbonIcons.Parcels" />
+        </div>
+    </RibbonGroup>
+</div>

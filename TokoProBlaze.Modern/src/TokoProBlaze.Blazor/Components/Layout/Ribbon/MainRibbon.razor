@@ -1,0 +1,111 @@
+@rendermode InteractiveServer
+@implements IDisposable
+@inject NavigationManager Nav
+
+<header class="sticky top-0 z-40 border-b border-slate-300 bg-gradient-to-b from-sky-100 via-sky-50 to-slate-100 shadow-sm">
+    @* Utility bar *@
+    <div class="flex h-10 items-center justify-between border-b border-sky-200/80 bg-gradient-to-r from-slate-800 via-slate-800 to-slate-900 px-3 text-white">
+        <div class="flex items-center gap-2">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500 text-sm font-bold shadow-inner" title="TokoProBlaze">$</span>
+            <div class="hidden items-center gap-1 sm:flex">
+                <RibbonToolbarIcon Label="Keamanan" />
+                <RibbonToolbarIcon Label="Paket" />
+                <RibbonToolbarIcon Label="Grafik" />
+                <RibbonToolbarIcon Label="Pengaturan" />
+                <RibbonToolbarIcon Label="Keluar" Danger="true" />
+            </div>
+        </div>
+        <span class="absolute left-1/2 hidden -translate-x-1/2 text-sm font-semibold tracking-wide text-slate-100 sm:block">TokoProBlaze</span>
+        <div class="flex items-center gap-2 text-xs text-slate-300">
+            <NavLink href="" class="rounded px-2 py-1 hover:bg-white/10 hover:text-white" Match="NavLinkMatch.All">Beranda</NavLink>
+        </div>
+    </div>
+
+    @* Module tabs *@
+    <div class="flex items-stretch gap-0 px-1 pt-1">
+        <button type="button" class="@TabClass("inventori")" @onclick='() => SelectTab("inventori")'>Inventori</button>
+        <button type="button" class="@TabClass("penjualan")" @onclick='() => SelectTab("penjualan")'>Penjualan</button>
+        <button type="button" class="@TabClass("pembelian")" @onclick='() => SelectTab("pembelian")'>Pembelian</button>
+        <button type="button" class="@TabClass("keuangan")" @onclick='() => SelectTab("keuangan")'>Keuangan</button>
+        <button type="button" class="@TabClass("aset")" @onclick='() => SelectTab("aset")'>Aset Tetap</button>
+        <button type="button" class="@TabClass("akuntansi")" @onclick='() => SelectTab("akuntansi")'>Akuntansi</button>
+        <button type="button" class="@TabClass("pajak")" @onclick='() => SelectTab("pajak")'>Pajak</button>
+        <div class="ml-auto flex items-center pr-2">
+            <span class="flex h-8 w-8 cursor-default items-center justify-center rounded-full bg-gradient-to-br from-amber-400 via-rose-400 to-indigo-500 text-[10px] font-bold text-white shadow" title="Tema">▼</span>
+        </div>
+    </div>
+
+    @* Ribbon body *@
+    <div class="border-t border-sky-200/60 bg-white px-2 py-2">
+        @switch (_activeTab)
+        {
+            case "inventori":
+                <InventoriRibbon />
+                break;
+            case "penjualan":
+                <PenjualanRibbon />
+                break;
+            case "pembelian":
+                <PembelianRibbon />
+                break;
+            case "keuangan":
+                <KeuanganRibbon />
+                break;
+            case "aset":
+                <AsetRibbon />
+                break;
+            case "akuntansi":
+                <AkuntansiRibbon />
+                break;
+            case "pajak":
+                <PajakRibbon />
+                break;
+        }
+    </div>
+</header>
+
+@code {
+    private string _activeTab = "inventori";
+
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+        SyncTabFromUri(Nav.Uri);
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        SyncTabFromUri(e.Location);
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void SyncTabFromUri(string uri)
+    {
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out var u))
+            return;
+        var path = u.AbsolutePath.TrimEnd('/').ToLowerInvariant();
+        if (path.EndsWith("/master-barang", StringComparison.Ordinal) || path.Equals("/master-barang", StringComparison.Ordinal))
+            _activeTab = "inventori";
+        else if (path.EndsWith("/master-pelanggan", StringComparison.Ordinal) || path.Equals("/master-pelanggan", StringComparison.Ordinal))
+            _activeTab = "penjualan";
+        else if (path.EndsWith("/master-pemasok", StringComparison.Ordinal) || path.Equals("/master-pemasok", StringComparison.Ordinal))
+            _activeTab = "pembelian";
+        else if (path.Length == 0 || path == "/" || path.EndsWith("/not-found", StringComparison.Ordinal))
+            _activeTab = "inventori";
+    }
+
+    private void SelectTab(string id) => _activeTab = id;
+
+    private string TabClass(string id)
+    {
+        var active = _activeTab == id;
+        return active
+            ? "relative border-t-4 border-sky-600 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm"
+            : "border-t-4 border-transparent bg-sky-100/70 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white/90 hover:text-slate-900";
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+    }
+}

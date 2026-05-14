@@ -1,0 +1,16 @@
+<button type="button" title="@Label"
+        class="flex h-7 w-7 items-center justify-center rounded border border-white/10 bg-white/5 text-[11px] hover:bg-white/15 @(Danger ? "text-rose-300 hover:text-rose-200" : "text-slate-200")">
+    @if (Danger)
+    {
+        <span class="text-xs">⏻</span>
+    }
+    else
+    {
+        <span class="opacity-80">◆</span>
+    }
+</button>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public bool Danger { get; set; }
+}
