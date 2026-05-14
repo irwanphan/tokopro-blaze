@@ -45,8 +45,8 @@
     }
     else
     {
-        <div class="grid gap-4 lg:grid-cols-3">
-            <div class="overflow-hidden rounded-xl border border-slate-200 lg:col-span-2">
+        <div class="flex">
+            <div class="min-h-0 overflow-x-auto rounded-xl border border-slate-200 w-full">
                 <MudDataGrid @ref="_grid"
                              T="MasterBarangGridRow"
                              Items="@gridRows"
@@ -55,11 +55,16 @@
                              Striped="true"
                              Outlined="true"
                              Filterable="true"
+                             FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive"
                              ShowMenuIcon="true"
                              Hideable="true"
+                             Groupable="true"
+                             GroupExpanded="true"
                              ColumnsPanelReordering="true"
+                             DragDropColumnReordering="true"
+                             SortMode="SortMode.Single"
                              FixedHeader="true"
-                             Height="440px"
+                             Height="min(560px, max(280px, calc(100dvh - 22rem)))"
                              RowClick="@OnGridRowClick">
                     <ToolBarContent>
                         <MudText Typo="Typo.subtitle2" Class="mud-table-toolbar-title">Barang &amp; Jasa</MudText>
@@ -71,19 +76,24 @@
                                        OnClick="OpenColumnsPanel" />
                     </ToolBarContent>
                     <Columns>
-                        <PropertyColumn Property="x => x.No" Title="No" Hideable="true" />
-                        <PropertyColumn Property="x => x.Kode" Title="Kode" Hideable="true" />
-                        <PropertyColumn Property="x => x.Nama" Title="Nama" Hideable="true" />
-                        <PropertyColumn Property="x => x.Satuan1" Title="Satuan 1" Hideable="true" />
-                        <PropertyColumn Property="x => x.Satuan2" Title="Satuan 2" Hideable="true" />
-                        <PropertyColumn Property="x => x.Satuan3" Title="Satuan 3" Hideable="true" />
-                        <PropertyColumn Property="x => x.Barcode" Title="Barcode" Hideable="true" />
-                        <PropertyColumn Property="x => x.Tipe" Title="Tipe" Hideable="true" />
-                        <PropertyColumn Property="x => x.Divisi" Title="Divisi" Hideable="true" />
-                        <PropertyColumn Property="x => x.Merk" Title="Merk" Hideable="true" />
-                        <PropertyColumn Property="x => x.Grup" Title="Grup" Hideable="true" />
-                        <PropertyColumn Property="x => x.Ukuran" Title="Ukuran" Hideable="true" />
-                        <TemplateColumn Title="Status" Hideable="true">
+                        <PropertyColumn Property="x => x.No" Title="No" Hideable="true" Groupable="false" />
+                        <PropertyColumn Property="x => x.Kode" Title="Kode" Hideable="true" Groupable="true" />
+                        <PropertyColumn Property="x => x.Nama" Title="Nama" Hideable="true" Groupable="true" />
+                        <PropertyColumn Property="x => x.Satuan1" Title="Satuan 1" Hideable="true" Groupable="true" />
+                        <PropertyColumn Property="x => x.Satuan2" Title="Satuan 2" Hideable="true" Groupable="true" />
+                        <PropertyColumn Property="x => x.Satuan3" Title="Satuan 3" Hideable="true" Groupable="true" />
+                        <PropertyColumn Property="x => x.Barcode" Title="Barcode" Hideable="true" Groupable="true" />
+                        <PropertyColumn Property="x => x.Tipe" Title="Tipe" Hideable="true" Groupable="true" />
+                        <PropertyColumn Property="x => x.Divisi" Title="Divisi" Hideable="true" Groupable="true" />
+                        <PropertyColumn Property="x => x.Merk" Title="Merk" Hideable="true" Groupable="true" />
+                        <PropertyColumn Property="x => x.Grup" Title="Grup" Hideable="true" Groupable="true" />
+                        <PropertyColumn Property="x => x.Ukuran" Title="Ukuran" Hideable="true" Groupable="true" />
+                        <TemplateColumn Title="Status"
+                                        Hideable="true"
+                                        Groupable="false"
+                                        Sortable="false"
+                                        Filterable="false"
+                                        DragAndDropEnabled="false">
                             <CellTemplate>
                                 <MudChip T="string"
                                          Size="Size.Small"
@@ -92,7 +102,12 @@
                                          Text="@(context.Item.Aktif ? "Aktif" : "Nonaktif")" />
                             </CellTemplate>
                         </TemplateColumn>
-                        <TemplateColumn Title="Aksi" Hideable="false" Sortable="false" Filterable="false">
+                        <TemplateColumn Title="Aksi"
+                                        Hideable="false"
+                                        Groupable="false"
+                                        Sortable="false"
+                                        Filterable="false"
+                                        DragAndDropEnabled="false">
                             <CellTemplate>
                                 <MudLink Href="@EditHref(context.Item.Kode)" Typo="Typo.body2">Edit</MudLink>
                             </CellTemplate>
@@ -100,7 +115,7 @@
                     </Columns>
                 </MudDataGrid>
             </div>
-            <div class="rounded-xl border border-slate-200 bg-white p-4">
+            @* <div class="rounded-xl border border-slate-200 bg-white p-4">
                 <p class="text-sm font-semibold text-slate-700">Detail Barang</p>
                 @if (selectedProduct is null)
                 {
@@ -137,7 +152,7 @@
                         </div>
                     </dl>
                 }
-            </div>
+            </div> *@
         </div>
         <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">
             <p class="text-slate-600">Halaman @currentPage dari @totalPages - Total @totalItems data</p>
