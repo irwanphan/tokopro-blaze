@@ -3,7 +3,7 @@ using TokoProBlaze.Blazor.Services;
 namespace TokoProBlaze.Blazor.Models;
 
 /// <summary>
-/// Baris grid Master Barang &amp; Jasa. Kolom diperluas mengikuti legacy; nilai non-API ditampilkan kosong sampai mapping DB ditambahkan.
+/// Baris grid Master Barang &amp; Jasa — kolom diselaraskan dengan <c>tbbarang</c> (API).
 /// </summary>
 public sealed class MasterBarangGridRow
 {
@@ -39,6 +39,14 @@ public sealed class MasterBarangGridRow
         Kode = p.Code,
         Nama = p.Name,
         Satuan1 = p.Unit1,
+        Satuan2 = p.Unit2,
+        Satuan3 = p.Unit3,
+        Barcode = p.Barcode,
+        Tipe = p.Tipe,
+        Divisi = p.Divisi,
+        Merk = p.Merk,
+        Grup = p.Grup,
+        Ukuran = p.Ukuran,
         Aktif = p.IsActive
     };
 }

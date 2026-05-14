@@ -2,7 +2,19 @@ using TokoProBlaze.Domain.Products;
 
 namespace TokoProBlaze.Application.Products;
 
-public sealed record ProductDto(string Code, string Name, string Unit1, bool IsActive);
+public sealed record ProductDto(
+    string Code,
+    string Name,
+    string Unit1,
+    bool IsActive,
+    string Unit2 = "",
+    string Unit3 = "",
+    string Barcode = "",
+    string Tipe = "",
+    string Divisi = "",
+    string Merk = "",
+    string Grup = "",
+    string Ukuran = "");
 
 public sealed record ProductCreateCommand(string Code, string Name, string Unit1, bool IsActive);
 
@@ -52,12 +64,20 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
             query = query.Where(p =>
                 p.Code.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
                 p.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
-                p.Unit1.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+                p.Unit1.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                p.Unit2.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                p.Unit3.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                p.Barcode.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                p.Tipe.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                p.Divisi.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                p.Merk.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                p.Grup.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                p.Ukuran.Contains(keyword, StringComparison.OrdinalIgnoreCase));
         }
 
         return query
             .OrderBy(p => p.Name)
-            .Select(p => new ProductDto(p.Code, p.Name, p.Unit1, p.IsActive))
+            .Select(MapDto)
             .ToArray();
     }
 
@@ -71,7 +91,7 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
         var product = await productRepository.GetByCodeAsync(code.Trim(), cancellationToken);
         return product is null
             ? null
-            : new ProductDto(product.Code, product.Name, product.Unit1, product.IsActive);
+            : MapDto(product);
     }
 
     public async Task<ProductSaveResult> CreateProductAsync(ProductCreateCommand command, CancellationToken cancellationToken = default)
@@ -103,7 +123,10 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
             return new ProductSaveResult(false, null, ProductSaveError.DuplicateCode, "Gagal menyimpan: kode duplikat.");
         }
 
-        return new ProductSaveResult(true, new ProductDto(product.Code, product.Name, product.Unit1, product.IsActive), ProductSaveError.None, null);
+        var reloaded = await productRepository.GetByCodeAsync(code, cancellationToken);
+        return reloaded is null
+            ? new ProductSaveResult(false, null, ProductSaveError.DuplicateCode, "Gagal memuat barang baru.")
+            : new ProductSaveResult(true, MapDto(reloaded), ProductSaveError.None, null);
     }
 
     public async Task<ProductSaveResult> UpdateProductAsync(string code, ProductUpdateCommand command, CancellationToken cancellationToken = default)
@@ -131,7 +154,15 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
             Code = existing.Code,
             Name = command.Name.Trim(),
             Unit1 = command.Unit1.Trim(),
-            IsActive = command.IsActive
+            IsActive = command.IsActive,
+            Unit2 = existing.Unit2,
+            Unit3 = existing.Unit3,
+            Barcode = existing.Barcode,
+            Tipe = existing.Tipe,
+            Divisi = existing.Divisi,
+            Merk = existing.Merk,
+            Grup = existing.Grup,
+            Ukuran = existing.Ukuran
         };
 
         var updated = await productRepository.UpdateAsync(product, cancellationToken);
@@ -140,7 +171,7 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
             return new ProductSaveResult(false, null, ProductSaveError.NotFound, "Barang tidak ditemukan.");
         }
 
-        return new ProductSaveResult(true, new ProductDto(product.Code, product.Name, product.Unit1, product.IsActive), ProductSaveError.None, null);
+        return new ProductSaveResult(true, MapDto(product), ProductSaveError.None, null);
     }
 
     private static string? Validate(string code, string name, string unit1)
@@ -162,4 +193,19 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
 
         return null;
     }
+
+    private static ProductDto MapDto(Product p) =>
+        new(
+            p.Code,
+            p.Name,
+            p.Unit1,
+            p.IsActive,
+            p.Unit2,
+            p.Unit3,
+            p.Barcode,
+            p.Tipe,
+            p.Divisi,
+            p.Merk,
+            p.Grup,
+            p.Ukuran);
 }

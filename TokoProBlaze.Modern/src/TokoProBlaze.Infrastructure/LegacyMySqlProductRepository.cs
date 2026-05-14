@@ -8,16 +8,70 @@ public sealed class LegacyMySqlProductRepository(string connectionString) : IPro
 {
     private static readonly IReadOnlyList<Product> FallbackSeed =
     [
-        new() { Code = "BRG001", Name = "Contoh Barang A", Unit1 = "PCS", IsActive = true },
-        new() { Code = "BRG002", Name = "Contoh Barang B", Unit1 = "BOX", IsActive = true },
-        new() { Code = "BRG003", Name = "Contoh Barang C", Unit1 = "PCS", IsActive = false }
+        new()
+        {
+            Code = "BRG001",
+            Name = "Contoh Barang A",
+            Unit1 = "PCS",
+            Unit2 = "BOX",
+            Unit3 = "",
+            Barcode = "899001",
+            Tipe = "J",
+            Divisi = "D01",
+            Merk = "M01",
+            Grup = "G01",
+            Ukuran = "-",
+            IsActive = true
+        },
+        new()
+        {
+            Code = "BRG002",
+            Name = "Contoh Barang B",
+            Unit1 = "BOX",
+            Unit2 = "",
+            Unit3 = "",
+            Barcode = "",
+            Tipe = "J",
+            Divisi = "D01",
+            Merk = "M02",
+            Grup = "G02",
+            Ukuran = "L",
+            IsActive = true
+        },
+        new()
+        {
+            Code = "BRG003",
+            Name = "Contoh Barang C",
+            Unit1 = "PCS",
+            Unit2 = "",
+            Unit3 = "",
+            Barcode = "",
+            Tipe = "J",
+            Divisi = "",
+            Merk = "",
+            Grup = "",
+            Ukuran = "",
+            IsActive = false
+        }
     ];
 
     public Task<IReadOnlyList<Product>> GetAllAsync(CancellationToken cancellationToken = default) =>
         Task.Run(() =>
         {
             const string sql = """
-                SELECT Kode, Nama, Satuan1, bNonAktif
+                SELECT
+                    Kode,
+                    Nama,
+                    Satuan1,
+                    IFNULL(Satuan2, '') AS Satuan2,
+                    IFNULL(Satuan3, '') AS Satuan3,
+                    IFNULL(Barcode, '') AS Barcode,
+                    IFNULL(Tipe, '') AS Tipe,
+                    IFNULL(KodeDivisi, '') AS KodeDivisi,
+                    IFNULL(KodeMerk, '') AS KodeMerk,
+                    IFNULL(KodeGrup, '') AS KodeGrup,
+                    IFNULL(Ukuran, '') AS Ukuran,
+                    bNonAktif
                 FROM tbbarang
                 ORDER BY Nama ASC
                 """;
@@ -48,7 +102,19 @@ public sealed class LegacyMySqlProductRepository(string connectionString) : IPro
         Task.Run(() =>
         {
             const string sql = """
-                SELECT Kode, Nama, Satuan1, bNonAktif
+                SELECT
+                    Kode,
+                    Nama,
+                    Satuan1,
+                    IFNULL(Satuan2, '') AS Satuan2,
+                    IFNULL(Satuan3, '') AS Satuan3,
+                    IFNULL(Barcode, '') AS Barcode,
+                    IFNULL(Tipe, '') AS Tipe,
+                    IFNULL(KodeDivisi, '') AS KodeDivisi,
+                    IFNULL(KodeMerk, '') AS KodeMerk,
+                    IFNULL(KodeGrup, '') AS KodeGrup,
+                    IFNULL(Ukuran, '') AS Ukuran,
+                    bNonAktif
                 FROM tbbarang
                 WHERE Kode = @Kode
                 LIMIT 1
@@ -138,6 +204,14 @@ public sealed class LegacyMySqlProductRepository(string connectionString) : IPro
             Code = reader["Kode"]?.ToString() ?? string.Empty,
             Name = reader["Nama"]?.ToString() ?? string.Empty,
             Unit1 = reader["Satuan1"]?.ToString() ?? string.Empty,
+            Unit2 = reader["Satuan2"]?.ToString() ?? string.Empty,
+            Unit3 = reader["Satuan3"]?.ToString() ?? string.Empty,
+            Barcode = reader["Barcode"]?.ToString() ?? string.Empty,
+            Tipe = reader["Tipe"]?.ToString() ?? string.Empty,
+            Divisi = reader["KodeDivisi"]?.ToString() ?? string.Empty,
+            Merk = reader["KodeMerk"]?.ToString() ?? string.Empty,
+            Grup = reader["KodeGrup"]?.ToString() ?? string.Empty,
+            Ukuran = reader["Ukuran"]?.ToString() ?? string.Empty,
             IsActive = !isNonActive
         };
     }
@@ -148,9 +222,51 @@ public sealed class FallbackProductRepository : IProductRepository
     private static readonly object Gate = new();
     private static readonly List<Product> Items =
     [
-        new() { Code = "BRG001", Name = "Contoh Barang A", Unit1 = "PCS", IsActive = true },
-        new() { Code = "BRG002", Name = "Contoh Barang B", Unit1 = "BOX", IsActive = true },
-        new() { Code = "BRG003", Name = "Contoh Barang C", Unit1 = "PCS", IsActive = false }
+        new()
+        {
+            Code = "BRG001",
+            Name = "Contoh Barang A",
+            Unit1 = "PCS",
+            Unit2 = "BOX",
+            Unit3 = "",
+            Barcode = "899001",
+            Tipe = "J",
+            Divisi = "D01",
+            Merk = "M01",
+            Grup = "G01",
+            Ukuran = "-",
+            IsActive = true
+        },
+        new()
+        {
+            Code = "BRG002",
+            Name = "Contoh Barang B",
+            Unit1 = "BOX",
+            Unit2 = "",
+            Unit3 = "",
+            Barcode = "",
+            Tipe = "J",
+            Divisi = "D01",
+            Merk = "M02",
+            Grup = "G02",
+            Ukuran = "L",
+            IsActive = true
+        },
+        new()
+        {
+            Code = "BRG003",
+            Name = "Contoh Barang C",
+            Unit1 = "PCS",
+            Unit2 = "",
+            Unit3 = "",
+            Barcode = "",
+            Tipe = "J",
+            Divisi = "",
+            Merk = "",
+            Grup = "",
+            Ukuran = "",
+            IsActive = false
+        }
     ];
 
     public Task<IReadOnlyList<Product>> GetAllAsync(CancellationToken cancellationToken = default)

@@ -1,7 +1,10 @@
 @page "/master-barang"
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
 @rendermode @(new Microsoft.AspNetCore.Components.Web.InteractiveServerRenderMode(prerender: false))
 @inject ProductApiClient ProductApiClient
 @inject CustomerApiClient CustomerApiClient
+@inject NavigationManager Nav
 
 <PageTitle>Master Barang</PageTitle>
 
@@ -9,7 +12,7 @@
     <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
             <h1 class="text-2xl font-semibold text-slate-900">Master Barang</h1>
-            <p class="text-sm text-slate-600">Sprint 2 — daftar barang dari tabel legacy <span class="font-medium text-slate-800">tbbarang</span>. Kolom tambahan mengikuti form TokoPro; isi non-API tampil kosong sampai mapping dilakukan.</p>
+            <p class="text-sm text-slate-600">Sprint 2 — daftar dari tabel legacy <span class="font-medium text-slate-800">tbbarang</span> (kolom kode divisi/merk/grup, satuan, barcode, dll. lewat API).</p>
         </div>
         @if (health is not null)
         {
@@ -24,7 +27,7 @@
                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
                        value="@keyword"
                        @onchange="OnKeywordChanged"
-                       placeholder="Kode, nama, atau satuan..." />
+                       placeholder="Kode, nama, satuan, barcode, merk, grup..." />
             </div>
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
@@ -45,8 +48,8 @@
     }
     else
     {
-        <div class="flex">
-            <div class="min-h-0 overflow-x-auto rounded-xl border border-slate-200 w-full">
+        <div class="flex flex-col gap-2">
+            <div class="min-h-0 w-full overflow-x-auto rounded-xl border border-slate-200">
                 <MudDataGrid @ref="_grid"
                              T="MasterBarangGridRow"
                              Items="@gridRows"
@@ -65,9 +68,10 @@
                              SortMode="SortMode.Single"
                              FixedHeader="true"
                              Height="min(560px, max(280px, calc(100dvh - 22rem)))"
-                             RowClick="@OnGridRowClick">
+                             RowContextMenuClick="_rowContextHandler">
                     <ToolBarContent>
                         <MudText Typo="Typo.subtitle2" Class="mud-table-toolbar-title">Barang &amp; Jasa</MudText>
+                        <MudText Typo="Typo.caption" Class="ml-2 hidden text-slate-500 sm:inline">Klik kanan baris untuk menu aksi.</MudText>
                         <MudSpacer />
                         <MudIconButton Icon="@Icons.Material.Filled.ViewColumn"
                                        Variant="Variant.Text"
@@ -102,19 +106,25 @@
                                          Text="@(context.Item.Aktif ? "Aktif" : "Nonaktif")" />
                             </CellTemplate>
                         </TemplateColumn>
-                        <TemplateColumn Title="Aksi"
-                                        Hideable="false"
-                                        Groupable="false"
-                                        Sortable="false"
-                                        Filterable="false"
-                                        DragAndDropEnabled="false">
-                            <CellTemplate>
-                                <MudLink Href="@EditHref(context.Item.Kode)" Typo="Typo.body2">Edit</MudLink>
-                            </CellTemplate>
-                        </TemplateColumn>
                     </Columns>
                 </MudDataGrid>
             </div>
+            <MudMenu @ref="_rowContextMenu"
+                     PositionAtCursor="true"
+                     PopoverFixed="true"
+                     Dense="true">
+                <ActivatorContent>
+                    <span class="pointer-events-none absolute h-px w-px overflow-hidden opacity-0" aria-hidden="true"></span>
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Edit"
+                                 Disabled="@(_contextRow is null)"
+                                 OnClick="NavigateEditFromContextAsync">
+                        Edit barang
+                    </MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+        </div>
             @* <div class="rounded-xl border border-slate-200 bg-white p-4">
                 <p class="text-sm font-semibold text-slate-700">Detail Barang</p>
                 @if (selectedProduct is null)
@@ -153,7 +163,6 @@
                     </dl>
                 }
             </div> *@
-        </div>
         <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">
             <p class="text-slate-600">Halaman @currentPage dari @totalPages - Total @totalItems data</p>
             <div class="flex gap-2">
@@ -174,9 +183,11 @@
 
 @code {
     private MudDataGrid<MasterBarangGridRow>? _grid;
+    private MudMenu? _rowContextMenu;
+    private MasterBarangGridRow? _contextRow;
+    private EventCallback<DataGridRowClickEventArgs<MasterBarangGridRow>> _rowContextHandler;
     private IReadOnlyList<ProductVm> products = [];
     private IReadOnlyList<MasterBarangGridRow> gridRows = [];
-    private ProductVm? selectedProduct;
     private LegacyDbHealthVm? health;
     private string? keyword;
     private bool isLoading = true;
@@ -188,6 +199,11 @@
 
     private bool IsLoading => isLoading;
     private string? ErrorMessage => errorMessage;
+
+    protected override void OnInitialized()
+    {
+        _rowContextHandler = EventCallback.Factory.Create<DataGridRowClickEventArgs<MasterBarangGridRow>>(this, OnRowContextMenuClickAsync);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -222,7 +238,6 @@
             totalItems = response.TotalItems;
             products = response.Items;
             RebuildGridRows();
-            selectedProduct = null;
         }
         catch (Exception)
         {
@@ -242,21 +257,29 @@
             .ToList();
     }
 
-    private async Task OnGridRowClick(DataGridRowClickEventArgs<MasterBarangGridRow> args)
+    private void OpenColumnsPanel(MouseEventArgs e) => _grid?.ShowColumnsPanel(e);
+
+    private async Task OnRowContextMenuClickAsync(DataGridRowClickEventArgs<MasterBarangGridRow> args)
     {
-        if (args.Item is null)
+        if (args.Item is null || _rowContextMenu is null || args.MouseEventArgs is null)
         {
             return;
         }
 
-        await LoadProductDetailAsync(args.Item.Kode);
+        _contextRow = args.Item;
+        await InvokeAsync(StateHasChanged);
+        await _rowContextMenu.OpenMenuAsync(args.MouseEventArgs, false);
     }
 
-    private void OpenColumnsPanel(MouseEventArgs e) => _grid?.ShowColumnsPanel(e);
-
-    private async Task LoadProductDetailAsync(string code)
+    private Task NavigateEditFromContextAsync()
     {
-        selectedProduct = await ProductApiClient.GetProductByCodeAsync(code);
+        if (_contextRow is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        Nav.NavigateTo(EditHref(_contextRow.Kode));
+        return Task.CompletedTask;
     }
 
     private static string EditHref(string code) =>

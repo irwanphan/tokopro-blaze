@@ -3,7 +3,19 @@ using System.Text.Json;
 
 namespace TokoProBlaze.Blazor.Services;
 
-public sealed record ProductVm(string Code, string Name, string Unit1, bool IsActive);
+public sealed record ProductVm(
+    string Code,
+    string Name,
+    string Unit1,
+    bool IsActive,
+    string Unit2 = "",
+    string Unit3 = "",
+    string Barcode = "",
+    string Tipe = "",
+    string Divisi = "",
+    string Merk = "",
+    string Grup = "",
+    string Ukuran = "");
 public sealed record ProductsPageVm(int Page, int PageSize, int TotalItems, int TotalPages, IReadOnlyList<ProductVm> Items);
 
 public sealed record ProductCreateRequest(string Code, string Name, string Unit1, bool IsActive);
