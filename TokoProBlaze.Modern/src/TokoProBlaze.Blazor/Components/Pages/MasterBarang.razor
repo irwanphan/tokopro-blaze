@@ -1,4 +1,5 @@
 @page "/master-barang"
+@rendermode @(new Microsoft.AspNetCore.Components.Web.InteractiveServerRenderMode(prerender: false))
 @inject ProductApiClient ProductApiClient
 @inject CustomerApiClient CustomerApiClient
 
@@ -8,7 +9,7 @@
     <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
             <h1 class="text-2xl font-semibold text-slate-900">Master Barang</h1>
-            <p class="text-sm text-slate-600">Sprint 2 — daftar barang dari tabel legacy <span class="font-medium text-slate-800">tbbarang</span>.</p>
+            <p class="text-sm text-slate-600">Sprint 2 — daftar barang dari tabel legacy <span class="font-medium text-slate-800">tbbarang</span>. Kolom tambahan mengikuti form TokoPro; isi non-API tampil kosong sampai mapping dilakukan.</p>
         </div>
         @if (health is not null)
         {
@@ -21,14 +22,16 @@
                 <label class="mb-1 block text-sm font-medium text-slate-700" for="keyword-barang">Cari barang</label>
                 <input id="keyword-barang"
                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
-                       @bind="Keyword"
-                       @bind:event="onchange"
+                       value="@keyword"
+                       @onchange="OnKeywordChanged"
                        placeholder="Kode, nama, atau satuan..." />
             </div>
-            <NavLink href="master-barang/input"
-                     class="inline-flex shrink-0 items-center justify-center rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Href="master-barang/input"
+                       Class="shrink-0">
                 + Input baru
-            </NavLink>
+            </MudButton>
         </div>
     </div>
 
@@ -44,44 +47,64 @@
     {
         <div class="grid gap-4 lg:grid-cols-3">
             <div class="overflow-hidden rounded-xl border border-slate-200 lg:col-span-2">
-                <table class="min-w-full divide-y divide-slate-200 text-sm">
-                    <thead class="bg-slate-50">
-                        <tr>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-600">Kode</th>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-600">Nama</th>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-600">Satuan</th>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
-                            <th class="px-4 py-3 text-right font-semibold text-slate-600">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 bg-white">
-                        @foreach (var product in products)
-                        {
-                            <tr class="cursor-pointer hover:bg-slate-50" @onclick="() => LoadProductDetailAsync(product.Code)">
-                                <td class="px-4 py-3 font-medium text-slate-800">@product.Code</td>
-                                <td class="px-4 py-3 text-slate-700">@product.Name</td>
-                                <td class="px-4 py-3 text-slate-700">@product.Unit1</td>
-                                <td class="px-4 py-3">
-                                    <span class="rounded-full px-2 py-1 text-xs font-medium @(product.IsActive ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600")">
-                                        @(product.IsActive ? "Aktif" : "Nonaktif")
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 text-right" @onclick:stopPropagation="true">
-                                    <NavLink href="@EditHref(product.Code)"
-                                             class="text-sm font-medium text-sky-700 hover:text-sky-900 hover:underline">
-                                        Edit
-                                    </NavLink>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                <MudDataGrid @ref="_grid"
+                             T="MasterBarangGridRow"
+                             Items="@gridRows"
+                             Dense="true"
+                             Hover="true"
+                             Striped="true"
+                             Outlined="true"
+                             Filterable="true"
+                             ShowMenuIcon="true"
+                             Hideable="true"
+                             ColumnsPanelReordering="true"
+                             FixedHeader="true"
+                             Height="440px"
+                             RowClick="@OnGridRowClick">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.subtitle2" Class="mud-table-toolbar-title">Barang &amp; Jasa</MudText>
+                        <MudSpacer />
+                        <MudIconButton Icon="@Icons.Material.Filled.ViewColumn"
+                                       Variant="Variant.Text"
+                                       Color="Color.Default"
+                                       title="Panel kolom: tampilkan, sembunyikan, urutkan"
+                                       OnClick="OpenColumnsPanel" />
+                    </ToolBarContent>
+                    <Columns>
+                        <PropertyColumn Property="x => x.No" Title="No" Hideable="true" />
+                        <PropertyColumn Property="x => x.Kode" Title="Kode" Hideable="true" />
+                        <PropertyColumn Property="x => x.Nama" Title="Nama" Hideable="true" />
+                        <PropertyColumn Property="x => x.Satuan1" Title="Satuan 1" Hideable="true" />
+                        <PropertyColumn Property="x => x.Satuan2" Title="Satuan 2" Hideable="true" />
+                        <PropertyColumn Property="x => x.Satuan3" Title="Satuan 3" Hideable="true" />
+                        <PropertyColumn Property="x => x.Barcode" Title="Barcode" Hideable="true" />
+                        <PropertyColumn Property="x => x.Tipe" Title="Tipe" Hideable="true" />
+                        <PropertyColumn Property="x => x.Divisi" Title="Divisi" Hideable="true" />
+                        <PropertyColumn Property="x => x.Merk" Title="Merk" Hideable="true" />
+                        <PropertyColumn Property="x => x.Grup" Title="Grup" Hideable="true" />
+                        <PropertyColumn Property="x => x.Ukuran" Title="Ukuran" Hideable="true" />
+                        <TemplateColumn Title="Status" Hideable="true">
+                            <CellTemplate>
+                                <MudChip T="string"
+                                         Size="Size.Small"
+                                         Variant="Variant.Filled"
+                                         Color="@(context.Item.Aktif ? Color.Success : Color.Default)"
+                                         Text="@(context.Item.Aktif ? "Aktif" : "Nonaktif")" />
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="Aksi" Hideable="false" Sortable="false" Filterable="false">
+                            <CellTemplate>
+                                <MudLink Href="@EditHref(context.Item.Kode)" Typo="Typo.body2">Edit</MudLink>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    </Columns>
+                </MudDataGrid>
             </div>
             <div class="rounded-xl border border-slate-200 bg-white p-4">
                 <p class="text-sm font-semibold text-slate-700">Detail Barang</p>
                 @if (selectedProduct is null)
                 {
-                    <p class="mt-2 text-sm text-slate-500">Pilih barang dari tabel untuk melihat detail.</p>
+                    <p class="mt-2 text-sm text-slate-500">Pilih baris pada grid untuk melihat detail.</p>
                 }
                 else
                 {
@@ -105,10 +128,12 @@
                             </dd>
                         </div>
                         <div class="pt-2">
-                            <NavLink href="@EditHref(selectedProduct.Code)"
-                                     class="inline-flex rounded-lg border border-sky-200 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-800 hover:bg-sky-100">
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       Href="@EditHref(selectedProduct.Code)">
                                 Buka form edit
-                            </NavLink>
+                            </MudButton>
                         </div>
                     </dl>
                 }
@@ -117,23 +142,25 @@
         <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">
             <p class="text-slate-600">Halaman @currentPage dari @totalPages - Total @totalItems data</p>
             <div class="flex gap-2">
-                <button class="rounded-lg border border-slate-300 px-3 py-1.5 text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled="@(currentPage <= 1)"
-                        @onclick="PreviousPageAsync">
+                <MudButton Variant="Variant.Outlined"
+                           Disabled="@(currentPage <= 1)"
+                           OnClick="PreviousPageAsync">
                     Sebelumnya
-                </button>
-                <button class="rounded-lg border border-slate-300 px-3 py-1.5 text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled="@(currentPage >= totalPages)"
-                        @onclick="NextPageAsync">
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Disabled="@(currentPage >= totalPages)"
+                           OnClick="NextPageAsync">
                     Berikutnya
-                </button>
+                </MudButton>
             </div>
         </div>
     }
 </section>
 
 @code {
+    private MudDataGrid<MasterBarangGridRow>? _grid;
     private IReadOnlyList<ProductVm> products = [];
+    private IReadOnlyList<MasterBarangGridRow> gridRows = [];
     private ProductVm? selectedProduct;
     private LegacyDbHealthVm? health;
     private string? keyword;
@@ -144,23 +171,27 @@
     private int totalPages = 1;
     private int totalItems;
 
-    private string? Keyword
-    {
-        get => keyword;
-        set
-        {
-            keyword = value;
-            currentPage = 1;
-            _ = LoadProductsAsync();
-        }
-    }
-
     private bool IsLoading => isLoading;
     private string? ErrorMessage => errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        health = await CustomerApiClient.GetLegacyDbHealthAsync();
+        try
+        {
+            health = await CustomerApiClient.GetLegacyDbHealthAsync();
+        }
+        catch (Exception)
+        {
+            health = new LegacyDbHealthVm(false, "fallback", "Tidak dapat menghubungi API (pastikan TokoProBlaze.Api berjalan dan ApiBaseUrl benar).");
+        }
+
+        await LoadProductsAsync();
+    }
+
+    private async Task OnKeywordChanged(ChangeEventArgs e)
+    {
+        keyword = e.Value?.ToString();
+        currentPage = 1;
         await LoadProductsAsync();
     }
 
@@ -175,6 +206,7 @@
             totalPages = response.TotalPages;
             totalItems = response.TotalItems;
             products = response.Items;
+            RebuildGridRows();
             selectedProduct = null;
         }
         catch (Exception)
@@ -186,6 +218,26 @@
             isLoading = false;
         }
     }
+
+    private void RebuildGridRows()
+    {
+        var start = (currentPage - 1) * PageSize;
+        gridRows = products
+            .Select((p, i) => MasterBarangGridRow.FromProduct(p, start + i + 1))
+            .ToList();
+    }
+
+    private async Task OnGridRowClick(DataGridRowClickEventArgs<MasterBarangGridRow> args)
+    {
+        if (args.Item is null)
+        {
+            return;
+        }
+
+        await LoadProductDetailAsync(args.Item.Kode);
+    }
+
+    private void OpenColumnsPanel(MouseEventArgs e) => _grid?.ShowColumnsPanel(e);
 
     private async Task LoadProductDetailAsync(string code)
     {

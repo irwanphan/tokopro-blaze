@@ -1,3 +1,4 @@
+using MudBlazor.Services;
 using TokoProBlaze.Blazor.Components;
 using TokoProBlaze.Blazor.Services;
 
@@ -6,6 +7,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddMudServices(config =>
+{
+    // Blazor Web App: @Body interaktif tidak selalu menjadi turunan MudPopoverProvider di pohon komponen.
+    // Tanpa ini, MudDataGrid (menu filter / panel kolom) dapat melempar saat provider hanya sejajar di layout.
+    config.PopoverOptions.CheckForPopoverProvider = false;
+});
 builder.Services.AddHttpClient<CustomerApiClient>((serviceProvider, client) =>
 {
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
